@@ -73,11 +73,13 @@ public class SessionServiceImpl implements SessionService {
 
             Double delta = 0.00;
 
-            if (correctAnswers.size() == 1) {
+            if (correctAnswers.size() == 0) {
+                delta = 0.00;
+            }
+            else if (correctAnswers.size() == 1) {
                 if (selectedAnswers.size() == 1 ) {
                     if (correctAnswers.get(0).equals(selectedAnswers.get(0))) {
                         delta = 1.00;
-                        //delta = new BigDecimal("1");
                     }
                 }
             } else {
@@ -87,19 +89,21 @@ public class SessionServiceImpl implements SessionService {
                 Double n = answerRepository.getCountAnswers(question.id);               //общее количество вариантов
                 Double m = Double.parseDouble(String.valueOf(correctAnswers.size()));   //общее количество верных ответов
 
-                if (n.compareTo(m) == 1) {
-                    delta += 1.00;
-                } else {
-                    for (Answer selectedAnswer : selectedAnswers) {
-                        if (correctAnswers.indexOf(selectedAnswer) == -1) {
-                            //выбран неверный ответ
-                            w += 1.00;
-                        } else {
-                            k += 1.00;
-                        }
+                for (Answer selectedAnswer : selectedAnswers) {
+                    if (correctAnswers.indexOf(selectedAnswer) == -1) {
+                        //выбран неверный ответ
+                        w += 1.00;
+                    } else {
+                        k += 1.00;
                     }
-                    delta = Double.max(0.00,k/m - w/(n - m));
                 }
+
+                if (n.compareTo(m) == 0) {
+                    delta = k / m;
+                } else {
+                    delta = Double.max(Double.parseDouble("0.00"), k / m - w / (n - m));
+                }
+
 
             }
 
@@ -107,12 +111,11 @@ public class SessionServiceImpl implements SessionService {
 
         }
 
-        try {
+        if (countQuestions.compareTo(Double.parseDouble("0.00")) == 1) {
             res = res * 100/countQuestions;
-        } catch (Exception e) {
+        } else {
             res = 0.00;
         }
-
 
         session.setPercent(res);
         sessionRepository.save(session);
