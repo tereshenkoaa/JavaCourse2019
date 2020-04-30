@@ -45,13 +45,13 @@ public class SessionServiceImpl implements SessionService {
 
         sessionRepository.save(session);
 
-        BigDecimal res = new BigDecimal("0");
-        BigDecimal countQuestions = new BigDecimal("0");
-
+        Double res = 0.00;
+        Double countQuestions = 0.00;
+        
         //запись выбранных ответов
         for (SessionQuestionListDTO question : dto.questionsList) {
 
-            countQuestions = countQuestions.add(new BigDecimal(1));
+            countQuestions += 1.00;
             List<Answer> selectedAnswers = new ArrayList<Answer>();
 
             for (SessionQuestionAnswerDTO answer : question.answersList) {
@@ -71,44 +71,50 @@ public class SessionServiceImpl implements SessionService {
             Question currentQuestion = questionRepository.findById(Long.parseLong(question.id)).get();
             List<Answer> correctAnswers = answerRepository.getCorrectAnswers(question.id);
 
-            BigDecimal delta = new BigDecimal("0");
+            Double delta = 0.00;
 
             if (correctAnswers.size() == 1) {
                 if (selectedAnswers.size() == 1 ) {
                     if (correctAnswers.get(0).equals(selectedAnswers.get(0))) {
-                        delta = new BigDecimal("1");
+                        delta = 1.00;
+                        //delta = new BigDecimal("1");
                     }
                 }
             } else {
-                BigDecimal k = new BigDecimal("0");    //количество выбранных верных ответов
-                BigDecimal w = new BigDecimal("0");    //количество выбранных НЕверных ответов
-                BigDecimal n = answerRepository.getCountAnswers(question.id);    //общее количество вариантов -> возьмем через сервис
-                BigDecimal m = new BigDecimal(correctAnswers.size()); //общее количество верных ответов
 
-                for (Answer selectedAnswer : selectedAnswers) {
-                    if (correctAnswers.indexOf(selectedAnswer) == -1) {
-                        //выбран неверный ответ
-                        w = w.add(new BigDecimal(1));
-                    } else {
-                         k = k.add(new BigDecimal(1));
+                Double k = 0.00;                                                        //количество выбранных верных ответов
+                Double w = 0.00;                                                        //количество выбранных НЕверных ответов
+                Double n = answerRepository.getCountAnswers(question.id);               //общее количество вариантов
+                Double m = Double.parseDouble(String.valueOf(correctAnswers.size()));   //общее количество верных ответов
 
+                if (n.compareTo(m) == 1) {
+                    delta += 1.00;
+                } else {
+                    for (Answer selectedAnswer : selectedAnswers) {
+                        if (correctAnswers.indexOf(selectedAnswer) == -1) {
+                            //выбран неверный ответ
+                            w += 1.00;
+                        } else {
+                            k += 1.00;
+                        }
                     }
+                    delta = Double.max(0.00,k/m - w/(n - m));
                 }
-                n = n.subtract(m);
-                w = w.multiply(n);
-                k = k.divide(m);
-                delta = k.subtract(w);
-                if (delta.signum() == -1) delta = new BigDecimal("0");
+
             }
 
-            res = res.add(delta);
+            res += delta;
 
         }
 
-        res = res.multiply(new BigDecimal(100));
-        res = res.divide(countQuestions, RoundingMode.CEILING);
+        try {
+            res = res * 100/countQuestions;
+        } catch (Exception e) {
+            res = 0.00;
+        }
 
-        session.setPercent(res.doubleValue());
+
+        session.setPercent(res);
         sessionRepository.save(session);
 
         return session;

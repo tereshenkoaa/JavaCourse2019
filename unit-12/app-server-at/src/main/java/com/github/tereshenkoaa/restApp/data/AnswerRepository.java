@@ -25,7 +25,7 @@ public interface AnswerRepository extends CrudRepository<Answer,Long> {
             value = "SELECT count(*) FROM answer where question_id = ?1 and is_mark = false",
             nativeQuery = true
     )
-    BigDecimal getCountAnswers(String id);
+    Double getCountAnswers(String id);
 
     @Query(
             value = "SELECT * FROM answer where question_id = ?1 AND is_correct = 'true' and is_mark = false",
