@@ -54,7 +54,6 @@ public class QuestionServiceImpl implements QuestionService {
 
         answerRepository.deleteByQuestionId(dto.id);
 
-        int cnt = 1;
         for (AnswerItemDTO answerDTO : dto.answers) {
             Answer answer = new Answer();
             answer.setName(answerDTO.answerText);
@@ -62,7 +61,6 @@ public class QuestionServiceImpl implements QuestionService {
             answer.setQuestion(question);
             answer.setMark(Boolean.FALSE);
             answerRepository.save(answer);
-            cnt = cnt + 1;
         }
 
         return new QuestionItemDTO(question, answerRepository.findByQuestionAndIsMarkFalse(question));
